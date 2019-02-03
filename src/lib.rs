@@ -52,6 +52,7 @@ macro_rules! d64 {
 } 
 
 mod context;
+mod decnumber;
 mod dec128;
 mod dec64;
 

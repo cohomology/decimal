@@ -8,12 +8,14 @@
 Decimal Floating Point arithmetic for rust based on the [decNumber
 library](http://speleotrove.com/decimal/decnumber.html).
 
-The library provides d128 which is a [128-bit decimal floating
-point](https://en.wikipedia.org/wiki/Decimal128_floating-point_format) number.
+The library provides d64 and d128 which are [64 bit floating point](https://en.wikipedia.org/wiki/Decimal64_floating-point_format)
+respectively [128-bit decimal floating
+point](https://en.wikipedia.org/wiki/Decimal128_floating-point_format) numbers. These types offer
+16 digits and 34 digits of precision. 
 You can use it as other primitive numbers in Rust. All operators are overloaded
 to allow ergonomic use of this type.
 
-To emulate literals a macro is used `d128!`.
+To emulate literals two macros `u64!` and `d128!` are used.
 
 [Documentation](https://docs.rs/decimal)
 

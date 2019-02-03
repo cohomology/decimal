@@ -2,6 +2,7 @@ use super::Class;
 use super::Status;
 use super::Rounding;
 
+use decnumber::*;
 use context::*;
 use libc::{c_char, int32_t, uint8_t, uint32_t};
 #[cfg(feature = "ord_subset")]
@@ -33,18 +34,6 @@ thread_local!(static CTX: RefCell<Context> = RefCell::new(d64::default_context()
 /// A 64-bit decimal floating point type.
 pub struct d64 {
     bytes: [uint8_t; 8],
-}
-
-#[repr(C)]
-#[derive(Clone, Copy)]
-struct decNumber {
-    digits: i32,
-    exponent: i32,
-    bits: u8,
-    // DECPUN = 3 because this is the fastest for conversion between decNumber and decDouble
-    // DECNUMDIGITS = 16 because we use decDouble only
-    // 6 = ((DECNUMDIGITS+DECDPUN-1)/DECDPUN)
-    lsu: [u16; 8],
 }
 
 impl Default for d64 {
