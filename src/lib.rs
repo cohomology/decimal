@@ -11,8 +11,8 @@ extern crate serde;
 #[cfg(test)]
 extern crate serde_json;
 
-#[macro_export]
-/// A macro to construct d128 literals.
+#[macro_export] 
+/// Macros to construct d64/128 literals.
 ///
 /// # Examples:
 /// ```
@@ -23,18 +23,28 @@ extern crate serde_json;
 /// assert!(d128!(0).is_zero());
 /// assert!(d128!(-0.1).is_negative());
 /// # }
-/// ```
+/// ```     
 macro_rules! d128 {
     ($lit:expr) => {{
         use std::str::FromStr;
         $crate::d128::from_str(stringify!($lit)).expect("Invalid decimal float literal")
     }}
-}
+} 
+
+#[macro_export]
+macro_rules! d64 {
+    ($lit:expr) => {{
+        use std::str::FromStr;
+        $crate::d64::from_str(stringify!($lit)).expect("Invalid decimal float literal")
+    }}
+} 
 
 mod context;
 mod dec128;
+mod dec64;
 
 pub use dec128::d128;
+pub use dec64::d64;
 
 #[repr(C)]
 #[derive(Clone, Copy, Debug, PartialEq)]
