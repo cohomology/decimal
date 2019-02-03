@@ -12,7 +12,7 @@ extern crate serde;
 extern crate serde_json;
 
 #[macro_export] 
-/// Macros to construct d64/128 literals.
+/// Macros to construct d128 literals.
 ///
 /// # Examples:
 /// ```
@@ -32,6 +32,18 @@ macro_rules! d128 {
 } 
 
 #[macro_export]
+/// Macros to construct d64 literals.
+///
+/// # Examples:
+/// ```
+/// # #[macro_use]
+/// # extern crate decimal;
+/// # fn main() {
+/// assert!(d64!(NaN).is_nan());
+/// assert!(d64!(0).is_zero());
+/// assert!(d64!(-0.1).is_negative());
+/// # }
+/// ```      
 macro_rules! d64 {
     ($lit:expr) => {{
         use std::str::FromStr;
