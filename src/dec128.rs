@@ -4,6 +4,7 @@ use super::Rounding;
 
 use decnumber::*;
 use context::*;
+use dec64::*;
 use libc::{c_char, int32_t, uint8_t, uint32_t};
 #[cfg(feature = "ord_subset")]
 use ord_subset;
@@ -27,13 +28,6 @@ use std::str::FromStr;
 use std::str::from_utf8_unchecked;
 
 thread_local!(static CTX: RefCell<Context> = RefCell::new(d128::default_context()));
-
-#[repr(C)]
-#[derive(Clone, Copy)]
-/// A 128-bit decimal floating point type.
-pub struct d128 {
-    bytes: [uint8_t; 16],
-}
 
 impl Default for d128 {
     fn default() -> Self {
@@ -161,6 +155,18 @@ impl From<i64> for d128 {
         }
     }
 }
+
+/// Converts an d64 to d128. The result is exact and no error is possible.
+impl From<d64> for d128 {
+    fn from(val: d64) -> d128 {
+        d128::with_context(|ctx| unsafe { 
+            let mut num: decNumber = uninitialized(); 
+            decimal64ToNumber(&val, num);
+            let mut res: d128 = uninitialized();
+            *decimal128FromNumber(&res, &mut num, ctx)
+        }
+    }
+}   
 
 impl AsRef<d128> for d128 {
     fn as_ref(&self) -> &d128 {
@@ -839,136 +845,6 @@ impl d128 {
     pub fn is_zero(&self) -> bool {
         unsafe { decQuadIsZero(self) != 0 }
     }
-}
-
-extern "C" {
-    // Context.
-    fn decContextDefault(ctx: *mut Context, kind: uint32_t) -> *mut Context;
-    // Utilities and conversions, extractors, etc.
-    fn decQuadFromBCD(res: *mut d128, exp: i32, bcd: *const u8, sign: i32) -> *mut d128;
-    fn decQuadFromInt32(res: *mut d128, src: int32_t) -> *mut d128;
-    fn decQuadFromString(res: *mut d128, s: *const c_char, ctx: *mut Context) -> *mut d128;
-    fn decQuadFromUInt32(res: *mut d128, src: uint32_t) -> *mut d128;
-    fn decQuadToString(src: *const d128, s: *mut c_char) -> *mut c_char;
-    fn decQuadToInt32(src: *const d128, ctx: *mut Context, round: Rounding) -> int32_t;
-    fn decQuadToUInt32(src: *const d128, ctx: *mut Context, round: Rounding) -> uint32_t;
-    fn decQuadToEngString(res: *const d128, s: *mut c_char) -> *mut c_char;
-    fn decQuadZero(res: *mut d128) -> *mut d128;
-    // Computational.
-    fn decQuadAbs(res: *mut d128, src: *const d128, ctx: *mut Context) -> *mut d128;
-    fn decQuadAdd(res: *mut d128, a: *const d128, b: *const d128, ctx: *mut Context) -> *mut d128;
-    fn decQuadAnd(res: *mut d128, a: *const d128, b: *const d128, ctx: *mut Context) -> *mut d128;
-    fn decQuadDivide(res: *mut d128,
-                     a: *const d128,
-                     b: *const d128,
-                     ctx: *mut Context)
-                     -> *mut d128;
-    fn decQuadFMA(res: *mut d128,
-                  a: *const d128,
-                  b: *const d128,
-                  c: *const d128,
-                  ctx: *mut Context)
-                  -> *mut d128;
-    fn decQuadInvert(res: *mut d128, src: *const d128, ctx: *mut Context) -> *mut d128;
-    fn decQuadLogB(res: *mut d128, src: *const d128, ctx: *mut Context) -> *mut d128;
-    fn decQuadMax(res: *mut d128, a: *const d128, b: *const d128, ctx: *mut Context) -> *mut d128;
-    fn decQuadMin(res: *mut d128, a: *const d128, b: *const d128, ctx: *mut Context) -> *mut d128;
-    fn decQuadMinus(res: *mut d128, src: *const d128, ctx: *mut Context) -> *mut d128;
-    fn decQuadMultiply(res: *mut d128,
-                       a: *const d128,
-                       b: *const d128,
-                       ctx: *mut Context)
-                       -> *mut d128;
-    fn decQuadNextMinus(res: *mut d128, src: *const d128, ctx: *mut Context) -> *mut d128;
-    fn decQuadNextPlus(res: *mut d128, src: *const d128, ctx: *mut Context) -> *mut d128;
-    fn decQuadNextToward(res: *mut d128,
-                         src: *const d128,
-                         other: *const d128,
-                         ctx: *mut Context)
-                         -> *mut d128;
-    fn decQuadOr(res: *mut d128, a: *const d128, b: *const d128, ctx: *mut Context) -> *mut d128;
-    fn decQuadQuantize(res: *mut d128,
-                       a: *const d128,
-                       b: *const d128,
-                       ctx: *mut Context)
-                       -> *mut d128;
-    fn decQuadReduce(res: *mut d128, src: *const d128, ctx: *mut Context) -> *mut d128;
-    fn decQuadRemainder(res: *mut d128,
-                        a: *const d128,
-                        b: *const d128,
-                        ctx: *mut Context)
-                        -> *mut d128;
-    fn decQuadRotate(res: *mut d128,
-                     a: *const d128,
-                     b: *const d128,
-                     ctx: *mut Context)
-                     -> *mut d128;
-    fn decQuadScaleB(res: *mut d128,
-                     a: *const d128,
-                     b: *const d128,
-                     ctx: *mut Context)
-                     -> *mut d128;
-    fn decQuadShift(res: *mut d128,
-                    a: *const d128,
-                    b: *const d128,
-                    ctx: *mut Context)
-                    -> *mut d128;
-    fn decQuadSubtract(res: *mut d128,
-                       a: *const d128,
-                       b: *const d128,
-                       ctx: *mut Context)
-                       -> *mut d128;
-    fn decQuadXor(res: *mut d128, a: *const d128, b: *const d128, ctx: *mut Context) -> *mut d128;
-    // Comparisons.
-    fn decQuadCompare(res: *mut d128,
-                      a: *const d128,
-                      b: *const d128,
-                      ctx: *mut Context)
-                      -> *mut d128;
-    fn decQuadCompareTotal(res: *mut d128,
-                           a: *const d128,
-                           b: *const d128,
-                           ctx: *mut Context)
-                           -> *mut d128;
-    // Copies.
-    fn decQuadCanonical(res: *mut d128, src: *const d128) -> *mut d128;
-    // Non-computational.
-    fn decQuadClass(src: *const d128) -> Class;
-    fn decQuadDigits(src: *const d128) -> uint32_t;
-    fn decQuadIsCanonical(src: *const d128) -> uint32_t;
-    fn decQuadIsFinite(src: *const d128) -> uint32_t;
-    fn decQuadIsInteger(src: *const d128) -> uint32_t;
-    fn decQuadIsLogical(src: *const d128) -> uint32_t;
-    fn decQuadIsInfinite(src: *const d128) -> uint32_t;
-    fn decQuadIsNaN(src: *const d128) -> uint32_t;
-    fn decQuadIsNegative(src: *const d128) -> uint32_t;
-    fn decQuadIsNormal(src: *const d128) -> uint32_t;
-    fn decQuadIsPositive(src: *const d128) -> uint32_t;
-    fn decQuadIsSignaling(src: *const d128) -> uint32_t;
-    fn decQuadIsSigned(src: *const d128) -> uint32_t;
-    fn decQuadIsSubnormal(src: *const d128) -> uint32_t;
-    fn decQuadIsZero(src: *const d128) -> uint32_t;
-    // decNumber stuff.
-    fn decimal128FromNumber(res: *mut d128, src: *const decNumber, ctx: *mut Context) -> *mut d128;
-    fn decimal128ToNumber(src: *const d128, res: *mut decNumber) -> *mut decNumber;
-    fn decNumberPower(res: *mut decNumber,
-                      lhs: *const decNumber,
-                      rhs: *const decNumber,
-                      ctx: *mut Context)
-                      -> *mut decNumber;
-    fn decNumberExp(res: *mut decNumber,
-                    lhs: *const decNumber,
-                    rhs: *const decNumber,
-                    ctx: *mut Context)
-                    -> *mut decNumber;
-    fn decNumberLn(res: *mut decNumber,
-                   rhs: *const decNumber,
-                   ctx: *mut Context)
-                   -> *mut decNumber;
-    fn decNumberLog10(res: *mut decNumber,
-                      rhs: *const decNumber,
-                      ctx: *mut Context)
-                      -> *mut decNumber;
 }
 
 #[cfg(test)]

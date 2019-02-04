@@ -56,8 +56,7 @@ mod decnumber;
 mod dec128;
 mod dec64;
 
-pub use dec128::d128;
-pub use dec64::d64;
+pub use decnumber::{d64, d128};
 
 #[repr(C)]
 #[derive(Clone, Copy, Debug, PartialEq)]
